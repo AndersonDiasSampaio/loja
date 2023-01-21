@@ -2,181 +2,105 @@ package br.com.lojalegal.store.system.service;
 
 import java.util.ArrayList;
 import java.util.List;
- 
+
+import br.com.lojalegal.store.system.date.SellData;
 import br.com.lojalegal.store.system.model.Produto;
 import br.com.lojalegal.store.system.model.Venda;
 
-public class Vendas { 
+public class Vendas {
 
-	 List<Produto> lista = new ArrayList<Produto>();
-	 Estoque estoqueProduto;
-	 Venda vendaFinalizada = new Venda();
-	 
-	 //Dados do list
-	 public void produtos(Estoque produtos) {
-		 estoqueProduto = produtos;
-		  
-	 }
-	 
-	 //listar produto no carrinho  
-	 public List<Produto> getLista() {
-		 return lista;
-		 
-		 
-	 }
-	 //procurar produto no carrinho  
-	 public Produto procurandoSku(String sku) {
-		 
-		for(int x = 0; x<lista.size(); x++) {
-			Produto produto = (Produto) lista.get(x);
-			if(sku.equals(produto.getSku())) {
-				return produto;
-			}
+	private SellData sellData = new SellData();
+
+	public Vendas() {
+		// TODO Auto-generated constructor stub
+	}
+
+	public String addProductCard(Produto product, int quantity) {
+		Produto p = new Produto(product.getSku(), product.getQuantidade(), product.getValor(), product.getDescricao());
+
+		if (p.getSku() == null) {
+			return "Nao foi possivel adicionar ao carrinho de compras";
+		} else {
+
+			p.setQuantidade(quantity);
+			Object p2 = p;
+			sellData.update(p2);
+
+			return "Adicionado com sucesso ao carrinho de compras: " + "\n" + p2.toString();
 		}
-		 return null;
-		 
-	 }
-	 //tá colocando e atualizando caso já aja, resolvido
-	//Colocar no carrinho usando do sku
-	 public String colocarNoCarrinho(String sku, int quantidade, Estoque estoque ) { 
-		 boolean produtoNalista= false;
-		 if(estoque.procurarProduto(sku)!=null) {
-		 Produto p = estoque.procurarProduto(sku); 
-		 for(int x = 0; x<lista.size(); x++) {
-				Produto produto = (Produto) lista.get(x);
-				if(sku.equals(produto.getSku())) {
-					produto.setQuantidade(quantidade);
-					produtoNalista=true;
+	}
+
+	public List<Produto> productIncardToSell() {
+		return sellData.listProduct();
+	}
+
+	public SellData getSellData() {
+		return sellData;
+	}
+
+	public List<Object> getSellDataList() {
+		return sellData.listItens();
+	}
+
+	public void cancel() {
+		sellData.refrestcard();
+
+	}
+
+	public void setAndVerifyCPF(String a) {
+		this.sellData.setSellCPF(a);
+	}
+
+	public String sellStockTestAndBuy(Estoque Stock, String CPF, String PaymentMethod, String valueBancaryData,
+			String name, String endereco) {
+		double priceToBil = 0d;
+		Object obj;
+		int negativeCount = productIncardToSell().size();
+		if (sellData.listProduct().size() > 0) {
+			for (int x = 0; x < Stock.listItems().size(); x++) {
+				// System.out.println("TEste +++" +Stock.getDataStock());
+				for (int y = 0; y < productIncardToSell().size(); y++) {
+					Produto p8 = (Produto) getSellData().getItem(y);
+					// System.out.println("TEste +++" +p8);
+
+					if (p8.getSku() == Stock.procurarProduto(x).getSku()
+							&& p8.getQuantidade() <= Stock.procurarProduto(x).getQuantidade()) {
+						negativeCount--;
+
+					}
+
 				}
+
 			}
-		 
-		 if(produtoNalista==false) {
-			 Produto produto = new Produto(p.getSku(), quantidade, p.getValor(), p.getDescricao());
-				
-			 lista.add(produto);
-		 }
-		 
-		 
-		
-		 return lista.toString();}
-		 else {
-			 return null;
-		 }
-		 
-			 
-	 }
- 	 //MÉTODO NEM É USADO
-	 //editar produto no carrinho  
-	 private int arrumandoProdutonoCarrinho(Produto produto) { 
-		 int arrumar = 1;
-		 for(int x= 0; x<getLista().size(); x++) {
-			 Produto produtoSku = getLista().get(x);
-			 if(produto.getSku().equals(produtoSku.getSku())) {
-				 arrumar = x; 
-			 }
-			 
-		 }
-		 switch(arrumar) {
-		 case 1:
-			 return 2;  
-		 
-		 default:
-		if(lista.set(arrumar, produto) != null) {
-			conferindoProdutos();  
-			return 0;
-		
-		}else {
-			return 2;
-    }
-			 
-   } 
- }
-	 //USADO EM UM MÉTÓDO NEM USADO
-	//verificar os produtos  
-	 private void conferindoProdutos() {
-		 for(int x = 0; x<lista.size(); x++) {
-			 Produto produto = lista.get(x);
-			 if(produto.getQuantidade() <= 0) {
-				 lista.remove(produto);
-			 }
-		 }
+			if (negativeCount == 0) {
+				for (int x = 0; x < Stock.listItems().size(); x++) {
+					for (int y = 0; y < productIncardToSell().size(); y++) {
+						Produto p8 = (Produto) getSellData().getItem(y);
+						if (p8.getSku() == Stock.procurarProduto(x).getSku()) {
+							Stock.procurarProduto(x)
+									.setQuantidade(Stock.procurarProduto(x).getQuantidade() - p8.getQuantidade());
+							priceToBil = (p8.getValor() * p8.getQuantidade()) + priceToBil;
+							System.out.println(priceToBil);
+							System.out.println(p8.toString());
+
+						}
+
+					}
+
+				}
+				System.out.println(negativeCount);
+				System.out.println(priceToBil);
+				System.out.println(PaymentMethod);
+				sellData.save(priceToBil, CPF, PaymentMethod, valueBancaryData, name, endereco);
+
+				return "Pedido realizado com sucesso";
+			} else {
+				sellData.refrestcard();
+				return "Pedido cancelado, produtos do carrinho exedem a quantidade do estoque";
+			}
+		} else {
+			return "Pedido cancelado, carinho vazio";
+		}
+
 	}
-	 //VERIFICAR TÁ INTERESSANTE ------------------ funcionando
-	 //retirar produto do carrinho  
-	 public String removerDoCarrinho(String sku, int quantidade) {
-		 Produto produto = procurandoSku(sku);
-		 
-		 if(produto == null) {
-			 return "N�o existe";
-		 
-		 }else if(produto.getQuantidade() < quantidade) {
-			 return "N�o tem essa quantidade";
-			 
-		 }else if(quantidade <= 0) {
-			 return "Digite de novo";
-		 }else {
-			 devolverProdutoAoEstoque(produto.getSku(), quantidade);
-		     produto.setQuantidade(produto.getQuantidade() - quantidade);
-			 return "Removido";
-		 } 
-	 	 
-	 }
-	 //Devolver produto  
-	 public void devolverProdutoAoEstoque(String sku, int quantidade) {
-		 Produto produtoNoEstoque =  estoqueProduto.procurarProduto(sku);
-		 if(produtoNoEstoque == null) {
-			 estoqueProduto.registrarProduto(produtoNoEstoque);
-		 }else {
-			 quantidade = produtoNoEstoque.getQuantidade() + quantidade;
-			 Produto mostrarPoduto = new Produto(produtoNoEstoque.getSku(), produtoNoEstoque.getQuantidade(), produtoNoEstoque.getValor(), produtoNoEstoque.getDescricao());
-			 estoqueProduto.organizarProduto(mostrarPoduto, 0);
-		 }
- 		  
-	 }
- 	 
-	 private int excluirProdutoEstoqueDate(Produto produto, int quantidade) {
-		 
-		 if(produto.getQuantidade() < quantidade) {
-			 return 1;
-		 }else {
-			 quantidade = produto.getQuantidade() - quantidade;
-			 Produto produtoRt = new Produto(produto.getSku(), produto.getQuantidade(), produto.getValor(), produto.getDescricao());
-			 estoqueProduto.organizarProduto(produtoRt, 0);
-		 return 2;
-		  }
-		 	
-	}
-	//retirar produto do estoque  
-	  
-	 public int tirandoProdutoDoEstoque(Produto produto, int quantidade) {
-		 
-		 if(produto.getQuantidade() < quantidade) {
-			 return 1;
-	 	 } else {
-	 		 quantidade = produto.getQuantidade() - quantidade;
-	 		 Produto mostrar = new Produto(produto.getSku(), produto.getQuantidade(), produto.getValor(), produto.getDescricao());
-	 		estoqueProduto.organizarProduto(mostrar, 0);
-	 		return 2; 
-	 		 
-	 	 }
-		   
-	 }
-	 //valor total  
- 	 public  double valorFinal( ) {
- 		 Double valorFinal = 0.0;
- 		 for(int x = 0; x<lista.size(); x++) {
- 			valorFinal = valorFinal + (lista.get(x).getValor()* lista.get(x).getQuantidade());
- 		  }
- 		 return valorFinal;
- 	 }
- 	 //Esvaziar carrinho
-public String cancelarCompra() {
-	
-	for (int x = 0; x<getLista().size(); x++) {
-		Produto produto = getLista().get(x);
-		removerDoCarrinho(produto.getSku(), produto.getQuantidade());
-		
-	}
-	     return "Desistindo de compra";
-  }
 }

@@ -73,11 +73,17 @@ public class SellData {
 	}
 
 	public void save(double price, String CPF, String PaymentMethod, String valueBancaryData, String name, String endereco ) {
+		
+		//colocar this.sell
+		
+		//sell.setVender(this.sell.getVender());
 		this.sell.setTipoDePagamento(PaymentMethod, valueBancaryData);
 		this.sell.setDateTime();
 		this.sell.setPessoa(CPF, endereco, name);
+		this.sell.setPrice(price);
 
-		sellData.add(sell);
+		sellData.add(this.sell);
+		refrestcard();
 
 	}
 	
@@ -89,6 +95,11 @@ public class SellData {
 	public List<Produto> listProduct() {
 
 		return this.sell.getVender();
+	}
+
+	@Override
+	public String toString() {
+		return "SellData [sellData=" + sellData + ", sell=" + sell + "]";
 	}
 
 }

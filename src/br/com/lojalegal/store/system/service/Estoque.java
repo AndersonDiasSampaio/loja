@@ -27,6 +27,10 @@ public class Estoque {
 		}
 		return null;
 	}
+	public Produto procurarProduto(int valor) {
+		
+	return (Produto) this.estoqueservice.listItems().get(valor);
+	}
 	
  //registrar o produto
 	public String registrarProduto(Produto produto) {

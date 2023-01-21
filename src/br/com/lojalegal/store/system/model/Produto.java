@@ -28,6 +28,10 @@ public class Produto {
 		dados();
 	}
  
+	public Produto() {
+		// TODO Auto-generated constructor stub
+	}
+
 	public void setDepartamento(DepartamentoEnum departamento) {
 		this.departamento = departamento;
 	}

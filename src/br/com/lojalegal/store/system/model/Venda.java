@@ -103,4 +103,11 @@ public class Venda  {
 	public void setVender(Produto vender) {
 		this.vender.add(vender);
 	}
+
+	@Override
+	public String toString() {
+		return "Venda [pessoa=" + pessoa + ", total=" + total + ", tipoDePagamento=" + tipoDePagamento + ", dateTime="
+				+ dateTime + ", price=" + price + ", vender=" + vender + "]";
+	}
+	
 }
